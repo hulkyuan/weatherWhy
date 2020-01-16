@@ -642,7 +642,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.flymetomoon;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.flymetothemoon;
 				PRODUCT_NAME = AwesomeTSProject;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -662,7 +662,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.flymetomoon;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.flymetothemoon;
 				PRODUCT_NAME = AwesomeTSProject;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
