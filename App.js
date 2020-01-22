@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
-import { View, Image, Text, StyleSheet, Dimensions, Alert, FlatList } from 'react-native';
+import { View, Image, Text, StyleSheet, Dimensions, Alert, FlatList, SectionList } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
 import Location from './assets/images/svg/ios-pin.svg';
-import Cloud from './assets/images/svg/ios-cloud.svg';
 import LinearGradient from 'react-native-linear-gradient';
 import WeatherComponent from './WeatherComponent';
-// import weatherConfig from './weatherConfig';
+
 const styles = StyleSheet.create({
     section1: {
-        flex: 5, position: 'relative', alignItems: "center", width: '100%', paddingTop: 50
+        flex: 5, position: 'relative', alignItems: "center", width: '100%', paddingTop: 40
     },
     layer: {
         width: "100%",
@@ -23,18 +22,20 @@ const styles = StyleSheet.create({
     },
     section2: {
         flexDirection: 'column',
-        flex: 2,
+        flex: 5,
+        //height:150,
+        justifyContent: "space-between",
         backgroundColor: 'white',
         position: 'relative',
-        marginBottom: 10,
-        paddingLeft: 20,
+        paddingTop: 20,
+        // marginBottom: 10
     },
     section3: {
         flexDirection: 'column',
-        flex: 3,
+        flex: 4,
+        //height:896,
         backgroundColor: 'white',
         position: 'relative',
-        marginBottom: 10,
         paddingLeft: 20,
     },
     lightColor: {
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
     },
-    todayBottom: {
+    today24hours: {
         flex: 2,
         flexDirection: 'row',
         paddingTop: 10
@@ -106,8 +107,12 @@ const layer_h = 910;
 
 export default class FetchExample extends Component {
 
-    geoApi = "https://apis.map.qq.com/ws/geocoder/v1/";
-    weatherApi = "https://wis.qq.com/weather/common";
+    geoApi = "https://apis.map.qq.com/ws/geocoder/v1/";//经纬度转换城市
+    weatherApi = "https://wis.qq.com/weather/common";//城市天气
+    /**
+     * 查询城市source=xw&city=??
+     */
+    matchApi = 'https://wis.qq.com/city/matching';
 
     constructor(props) {
         super(props);
@@ -126,13 +131,18 @@ export default class FetchExample extends Component {
     }
     geolocation = () => {
         Geolocation.getCurrentPosition((info) => {
-            const { coords } = info;
+            let { coords } = info;
+            coords = {
+                latitude: '29.72373503',
+                longitude: '106.63697708'
+            };
             this.setState({
-                latitude: coords.latitude || '29.552469',
-                longitude: coords.longitude || '106.510468'
+                latitude: coords.latitude,
+                longitude: coords.longitude
             });
             let param = {
-                key: '3BFBZ-ZKD3X-LW54A-ZT76D-E7AHO-4RBD5', location: '29.552469' + "," + '106.510468'
+                key: '3BFBZ-ZKD3X-LW54A-ZT76D-E7AHO-4RBD5', location: coords.latitude + "," + coords.longitude
+                // key: '3BFBZ-ZKD3X-LW54A-ZT76D-E7AHO-4RBD5', location: coords.latitude + "," + coords.longitude
             }
             fetch(this.geoApi + `?${queryString.stringify(param)}`)
                 .then((response) => {
@@ -160,7 +170,6 @@ export default class FetchExample extends Component {
             weather_type: 'forecast_1h|forecast_24h|index|alarm|limit|tips|air|observe',
             ...location,
         }
-        //console.log(queryString.stringify(param));
         fetch(this.weatherApi + `?${queryString.stringify(param)}`)
             .then((response) => {
                 if (response.ok) {
@@ -192,6 +201,7 @@ export default class FetchExample extends Component {
     }
     render() {
         const _hscale = Dimensions.get('window').height / layer_h;
+        //{"fontScale": 1, "height": 896, "scale": 2, "width": 414}
         const _hoffset = Math.ceil(_hscale * layer_w - layer_w);
         const { address_component } = this.state;
         styles.layer = {
@@ -217,27 +227,20 @@ export default class FetchExample extends Component {
                         <Image style={styles.layerImage} source={require('./assets/images/layer3.png')}></Image>
                     </View>
                 </View>
-                {/* 今天 */}
+                {/* 底部天气界面部分 */}
                 <View style={styles.section2}>
-                    {this.getTodayDegree()}
-                    <View style={styles.todayBottom}>
-                        {this.getTodayInfo()}
-                    </View>
+                    {this.createListItem()}
                 </View>
-                <View style={styles.section3}>
-                    {this.weekInfo()}
-                </View>
-                {/**未来一周 */}
             </View >
         );
     }
-    weekInfo = () => {
+    createListItem = () => {
         const { weatherData } = this.state;
         if (!weatherData || !weatherData.forecast_24h) {
             return false;
         } else {
             let { forecast_24h } = weatherData;
-            forecast_24h = forecast_24h.slice(2, forecast_24h.length);
+            forecast_24h = forecast_24h.slice(1, forecast_24h.length);
             forecast_24h = forecast_24h.map((item, index) => {
                 return {
                     ...item,
@@ -245,34 +248,58 @@ export default class FetchExample extends Component {
                 }
             })
             return (
-                <FlatList
-                    data={forecast_24h}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={{ flexDirection: 'row', padding: 10, justifyContent: 'space-between' }}>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.degreeNumberStyle}>{this.getDay(item.time)}</Text>
-                                </View>
-                                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
-                                    <WeatherComponent weatherCode={item.day_weather_code}></WeatherComponent>
-                                    <WeatherComponent weatherCode={item.night_weather_code}></WeatherComponent>
-                                </View>
-                                <View style={{ flex: 1, flexDirection: 'row' }}>
-                                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                        <Text style={styles.degreeNumberStyle}>{item.max_degree}</Text>
-                                    </View>
-                                    <View style={{ flex: 1, alignItems: 'center' }}>
-                                        <Text style={styles.degreeNumberStyle}>{item.min_degree}</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        );
-                    }}
+                <SectionList
+                    renderItem={this.weekInfo}
+                    sections={[
+                        { title: 'Title1', data: forecast_24h.slice(0, 1), renderItem: this.overrideRenderItem },
+                        { title: 'Title2', data: forecast_24h.slice(1, forecast_24h.length) },
+                    ]}
                 />
             );
 
         }
+
     }
+    /**
+     * 重写list头部样式
+     */
+    overrideRenderItem = ({ item }) => {
+        return (
+            <View>
+                {this.getTodayDegree()}
+                <View style={styles.today24hours}>
+                    {this.getToday24Info()}
+                </View>
+            </View>);
+
+    }
+    /**
+     * 未来一周天气（不包含今日）
+     */
+    weekInfo = ({ item }) => {
+        return (
+            <View style={{ flexDirection: 'row', padding: 10, paddingLeft: 20, justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.degreeNumberStyle}>{this.getDay(item.time)}</Text>
+                </View>
+                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
+                    <WeatherComponent weatherCode={item.day_weather_code}></WeatherComponent>
+                    <WeatherComponent weatherCode={item.night_weather_code}></WeatherComponent>
+                </View>
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                        <Text style={styles.degreeNumberStyle}>{item.max_degree}</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={styles.minDegreeStyle}>{item.min_degree}</Text>
+                    </View>
+                </View>
+            </View>
+        );
+    }
+    /**
+     * 今日天气
+     */
     getTodayDegree = () => {
         const { weatherData } = this.state;
         if (!weatherData || !weatherData.forecast_24h) {
@@ -281,9 +308,9 @@ export default class FetchExample extends Component {
             let { forecast_24h } = weatherData;
             let today = forecast_24h[1];
             return (
-                <View style={{ ...styles.todayTop, paddingLeft: 10, paddingRight: 10 }} >
+                <View style={{ ...styles.todayTop, paddingLeft: 20, paddingRight: 10 }} >
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', }}>
-                        <Text style={styles.weekNumberStyle}>{this.getDay(Date.now())} </Text>
+                        <Text style={styles.degreeNumberStyle}>{this.getDay(Date.now())} </Text>
                         <Text style={styles.weekNumberStyle - 4}> 今天</Text>
                     </View>
                     <View style={{ flex: 1 }}></View>
@@ -302,7 +329,7 @@ export default class FetchExample extends Component {
     /**
      * 显示此刻到未来24小时天气
      */
-    getTodayInfo = () => {
+    getToday24Info = () => {
         const { weatherData } = this.state;
         if (!weatherData || !weatherData.forecast_1h) {
             return false;
@@ -316,6 +343,7 @@ export default class FetchExample extends Component {
             })
             forecast_1h = forecast_1h.slice(0, 24);
             return (
+
                 <FlatList
                     data={forecast_1h}
                     horizontal={true}
@@ -323,7 +351,7 @@ export default class FetchExample extends Component {
                         const hour = item.update_time.substring(8, 10);
                         const min = item.update_time.substring(10, 12);
                         return (
-                            <View style={{ alignItems: 'center', paddingRight: 15, paddingLeft: 10 }}>
+                            <View style={{ alignItems: 'center', padding: 15, justifyContent: "space-around", borderTopColor: '#cccccc', borderBottomColor: '#cccccc', borderStyle: "solid", borderTopWidth: 1, borderBottomWidth: 1 }}>
                                 <Text style={styles.degreeNumberStyle}>{hour}:{min}</Text>
                                 <WeatherComponent weatherCode={item.weather_code}></WeatherComponent>
                                 <Text style={styles.degreeNumberStyle}>{item.degree}°</Text>
@@ -334,6 +362,9 @@ export default class FetchExample extends Component {
             );
         }
     }
+    /**
+     * 顶部信息
+     */
     showObserve = () => {
         const { weatherData } = this.state;
         if (!weatherData || !weatherData.observe) {
@@ -342,15 +373,18 @@ export default class FetchExample extends Component {
             const { observe, tips } = weatherData;
             return (
                 <View style={{ alignItems: "center", position: 'relative', zIndex: 999 }}>
-                    <Text style={{ fontSize: 62, ...styles.lightColor, paddingTop: 20 }}>{observe.degree}°</Text>
+                    <Text style={{ fontSize: 50, ...styles.lightColor, paddingTop: 10 }}>{observe.degree}°</Text>
                     <Text style={{ fontSize: 22, ...styles.lightColor, padding: 5 }}>{observe.weather_short}</Text>
                     <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>湿度 {observe.humidity}%</Text>
-                    <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>北风 {observe.wind_power}级</Text>
-                    <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 25 }}>{tips.observe[0]}</Text>
+                    {/* <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>北风 {observe.wind_power}级</Text> */}
+                    <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>{tips.observe[0]}</Text>
                 </View>
             );
         }
     }
+    /**
+     * 地址处理
+     */
     showAddress = () => {
         const { address_component } = this.state;
         let address_array = [];
