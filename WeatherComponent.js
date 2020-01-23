@@ -32,6 +32,7 @@ export default class Weather extends Component {
         const number = code;
         const url = `./assets/day/svg/${number}.svg`;
         const httpsUrl = `https://mat1.gtimg.com/pingjs/ext2020/weather/mobile2.0/assets/weather/day/${number}.svg`;
+        //console.log(httpsUrl);
         switch (code) {
             case '00':
                 return <Zero0 style={styles.iconStyle} />;
