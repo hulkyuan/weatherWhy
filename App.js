@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
-import { View, Image, Text, StyleSheet, Dimensions, ScrollView, FlatList, SectionList } from 'react-native';
+import {
+    View, Image, Text, StyleSheet, Dimensions,
+    ScrollView, FlatList, SectionList, TouchableOpacity,
+    TextInput, SafeAreaView, Button
+} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
 import Location from './assets/images/svg/ios-pin.svg';
 import LinearGradient from 'react-native-linear-gradient';
 import WeatherComponent from './WeatherComponent';
-import { windCode } from './WeatherConfig'
-
+import { windCode } from './WeatherConfig';
 const styles = StyleSheet.create({
     section1: {
         //flex: 5,
@@ -64,8 +67,8 @@ const styles = StyleSheet.create({
         color: 'grey'
     },
     iconStyle: {
-        width: 16,
-        height: 16
+        width: 20,
+        height: 20
     },
     font22: {
         fontSize: 22
@@ -84,6 +87,27 @@ const styles = StyleSheet.create({
     },
     borderBottom: {
         borderBottomColor: '#cccccc', borderBottomWidth: 1
+    },
+    searchPanel: {
+        width: '100%', height: '100%', backgroundColor: 'white', position: 'absolute', top: 0, left: 0, zIndex: 999
+    },
+    searchBar: {
+        paddingLeft: 20, flexDirection: 'row', alignItems: 'center', height: 50,
+    },
+    searchInputContainer: {
+        flex: 4
+    },
+    searchInput: {
+        borderWidth: 1, borderColor: '#cccccc', fontSize: 20, padding: 10, borderRadius: 10,
+    },
+    searchCloseBtn: {
+        flex: 1
+    },
+    searchList: {
+        flex: 4, padding: 20, paddingLeft: 30
+    },
+    searchItem: {
+        fontSize: 20, paddingTop: 15
     }
 });
 const skyLine = {
@@ -123,23 +147,28 @@ const layer_h = 910;
 export default class FetchExample extends Component {
 
     geoApi = "https://apis.map.qq.com/ws/geocoder/v1/";//经纬度转换城市
-    weatherApi = "https://wis.qq.com/weather/common";//城市天气
+    weatherCommonApi = "https://wis.qq.com/weather/common";//china weather
+    weatherTouristApi = 'https://wis.qq.com/weather/tourist';//tourist weather
+    weatherExternalApi = 'https://wis.qq.com/weather/external';//external weather
     /**
      * 查询城市source=xw&city=??
      */
     matchApi = 'https://wis.qq.com/city/matching';
-
+    queryTimeout = 0;
     constructor(props) {
         super(props);
         this.state = {
             address_component: null,
             latitude: '29.552469',
             longitude: '106.510468',
-            weatherData: null
+            weatherData: null,
+            searchPanel: false,
+            searchText: '',
+            source: 'xw',
+            heartBeat: 500,
+            type: 'common', //3种天气请求类型
+            list: [],//搜索的城市列表
         }
-    }
-    chooseDayLine = (weather) => {
-
     }
     componentDidMount() {
         this.geolocation();
@@ -179,13 +208,30 @@ export default class FetchExample extends Component {
                 })
         });
     }
-    weatherFecth = (location) => {
+    weatherFecth = (location, type) => {
+
+
+        this.setState({
+            address_component: location
+        });
+        let url, info;
+        if (type === 'tourist') {
+            url = this.weatherTouristApi;
+            info = 'forecast_1h|forecast_24h|tips|observe|rise';
+        } else if (type === "external") {
+            url = this.weatherExternalApi;
+            info = 'forecast_24h|tips|observe|rise';
+        } else {
+            url = this.weatherCommonApi;
+            info = 'forecast_1h|forecast_24h|index|alarm|limit|tips|air|observe|rise';
+        }
         const param = {
-            source: 'xw',
-            weather_type: 'forecast_1h|forecast_24h|index|alarm|limit|tips|air|observe|rise',
+            source: this.state.source,
+            weather_type: info,
             ...location,
         }
-        fetch(this.weatherApi + `?${queryString.stringify(param)}`)
+        //console.log(location,type,url);
+        fetch(url + `?${queryString.stringify(param)}`)
             .then((response) => {
                 if (response.ok) {
                     return response.json();
@@ -195,7 +241,6 @@ export default class FetchExample extends Component {
             })
             .then((responseJson) => {
                 this.reBuildForecast(responseJson.data);
-
             })
     }
     reBuildForecast = (data) => {
@@ -214,44 +259,161 @@ export default class FetchExample extends Component {
             weatherData: data
         })
     }
+    openCityView = (event) => {
+        this.setState({
+            searchPanel: true
+        });
+    }
+    showSearchView = () => {
+        const { searchText, list } = this.state;
+        return (
+            <SafeAreaView style={styles.searchPanel}>
+                <View style={styles.searchBar}>
+                    <View style={styles.searchInputContainer}>
+                        <TextInput
+                            placeholder="搜索地区"
+                            onChangeText={this.onChangeText}
+                            style={styles.searchInput}
+                            value={searchText}
+                            autoFocus={true}
+                            clearButtonMode="always"
+                        />
+                    </View>
+                    <View style={styles.searchCloseBtn}>
+                        <Button onPress={this.onCloseSearchPanel} title="取消" />
+                    </View>
+                </View>
+                <View style={styles.searchList}>
+                    <FlatList
+                        data={list}
+                        renderItem={this.createSearchItem}
+                    />
+                </View>
+            </SafeAreaView>
+        );
+    }
+    createSearchItem = ({ item }) => {
+        return (
+            <View >
+                <TouchableOpacity onPress={() => { this.onChooseCity(item); }}>
+                    <Text style={styles.searchItem}>{item.name}</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+    onChooseCity = (item) => {
+        let data;
+        if (item.type === 'tourist') {
+            data = {
+                tourist: item.name
+            };
+        } else if (item.type === 'external') {
+            data = {
+                country: item.name.split(',')[0] && item.name.split(',')[0].trim(),
+                city: item.name.split(',')[1] && item.name.split(',')[1].trim(),
+            }
+        } else {
+            data = {
+                province: item.name.split(',')[0] && item.name.split(',')[0].trim(),
+                city: item.name.split(',')[1] && item.name.split(',')[1].trim(),
+                county: item.name.split(',')[2] && item.name.split(',')[2].trim()
+            }
+        }
+        this.onCloseSearchPanel();
+        this.weatherFecth(data, item.type);
+    }
+    onCloseSearchPanel = () => {
+        this.setState({
+            searchPanel: false
+        })
+    }
+    onChangeText = (text) => {
+        clearTimeout(this.queryTimeout);
+        this.setState({
+            searchText: text
+        }, () => {
+            this.queryTimeout = setTimeout(this.fecthCity, this.state.heartBeat);
+        });
+
+    }
+    fecthCity = () => {
+        const { searchText } = this.state;
+        const param = {
+            source: this.state.source,
+            city: searchText
+        }
+
+        fetch(this.matchApi + `?${queryString.stringify(param)}`)
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    Alert.alert(response.statusText);
+                }
+            })
+            .then((responseJson) => {
+                if (responseJson.data) {
+                    const { data } = responseJson;
+                    let list = [];
+                    for (let prop in data) {
+                        if (data[prop] instanceof Object) {
+                            for (let i in data[prop]) {
+                                const item = { key: i, name: data[prop][i], type: prop }
+                                list.push(item);
+                            }
+                        }
+                    }
+                    this.setState({
+                        list
+                    });
+                }
+            })
+    }
     render() {
         const _hscale = Dimensions.get('window').height / layer_h;
-        const deviceHeight=Dimensions.get('window').height;
+        const deviceHeight = Dimensions.get('window').height;
         //{"fontScale": 1, "height": 896, "scale": 2, "width": 414}
         const _hoffset = Math.ceil(_hscale * layer_w - layer_w);
-        const { address_component } = this.state;
+        const { address_component, searchPanel } = this.state;
         styles.layer = {
             ...styles.layer,
             //bottom: _hoffset
         }
-        console.log(Dimensions.get('window').height);
         return (
-            <ScrollView style={{ position: "relative", flex: 1 }}>
-                {/* <LinearGradient colors={['#50ade8', '#7ae0fa']} angle={-90}></LinearGradient> */}
-                <View style={{ ...styles.section1, backgroundColor: 'lightblue', height:deviceHeight/2}}>
-                    <Text style={{ fontSize: 16, color: 'white' }}>
-                        <Location style={styles.iconStyle} fill="white" />
-                        {address_component && this.showAddress()}
-                    </Text>
-                    {this.showBreifObserve()}
-                    <View style={styles.layer}>
-                        <Image style={styles.layerImage} source={require('./assets/images/layer1.png')}></Image>
+            <View style={{ position: "relative", flex: 1 }}>
+                {
+                    searchPanel && this.showSearchView()
+                }
+                <LinearGradient colors={['#50ade8', '#7ae0fa']} angle={-90}>
+                    <View style={{ ...styles.section1, height: deviceHeight / 2 }}>
+                        <Text style={{ ...styles.lightColor, ...styles.font20 }}>
+                            <TouchableOpacity onPress={this.openCityView} >
+                                <Location style={styles.iconStyle} fill="white" />
+                            </TouchableOpacity>
+                            {address_component && this.showAddress()}
+                        </Text>
+                        {this.showBreifObserve()}
+                        <View style={styles.layer}>
+                            <Image style={styles.layerImage} source={require('./assets/images/layer1.png')}></Image>
+                        </View>
+                        <View style={styles.layer}>
+                            <Image style={styles.layerImage} source={require('./assets/images/layer2.png')}></Image>
+                        </View>
+                        <View style={styles.layer}>
+                            <Image style={styles.layerImage} source={require('./assets/images/layer3.png')}></Image>
+                        </View>
                     </View>
-                    <View style={styles.layer}>
-                        <Image style={styles.layerImage} source={require('./assets/images/layer2.png')}></Image>
-                    </View>
-                    <View style={styles.layer}>
-                        <Image style={styles.layerImage} source={require('./assets/images/layer3.png')}></Image>
-                    </View>
-                </View>
+                </LinearGradient>
                 {/* 底部天气界面部分 */}
-                <View style={styles.section2}>
-                    {this.createListItem()}
-                </View>
-                <View style={styles.section3}>
-                    {this.showMoreObserve()}
-                </View>
-            </ScrollView >
+                <ScrollView >
+                    <View style={styles.section2}>
+                        {this.createListItem()}
+                    </View>
+                    <View style={styles.section3}>
+                        {this.showMoreObserve()}
+                    </View>
+                </ScrollView>
+            </View >
         );
     }
     createListItem = () => {
@@ -287,7 +449,7 @@ export default class FetchExample extends Component {
     overrideRenderItem = ({ item }) => {
         return (
             <View style={{ paddingTop: 20 }}>
-                {this.getTodayDegree()}
+                {this.getTodayDegree(item)}
                 {/* <View style={styles.today24hours}>
                     {this.getToday24Info()}
                 </View> */}
@@ -327,30 +489,34 @@ export default class FetchExample extends Component {
                     <View style={{ ...styles.borderBottom, flex: 1 }}>
                         <Text style={{ ...styles.observeInfo, padding: 10, paddingLeft: 20 }}>中央气象台 {updateTime}发布</Text>
                     </View>
-                    <View style={{ paddingLeft: 20, paddingRight: 20, flex: 1 }}>
-                        <View style={{ ...styles.borderBottom, ...styles.observeLine, flex: 1 }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.observeTitle}>日出</Text>
-                                <Text style={styles.observeInfo}>{rise['0'].sunrise}</Text>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.observeTitle}>日落</Text>
-                                <Text style={styles.observeInfo}>{rise['0'].sunset}</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{ paddingLeft: 20, paddingRight: 20, flex: 1 }}>
-                        <View style={{ ...styles.borderBottom, ...styles.observeLine, flex: 1 }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.observeTitle}>空气指数</Text>
-                                <Text style={styles.observeInfo}>{air.aqi}</Text>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.observeTitle}>空气质量</Text>
-                                <Text style={styles.observeInfo}>{air.aqi_name}</Text>
+                    {rise['0'] &&
+                        <View style={{ paddingLeft: 20, paddingRight: 20, flex: 1 }}>
+                            <View style={{ ...styles.borderBottom, ...styles.observeLine, flex: 1 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.observeTitle}>日出</Text>
+                                    <Text style={styles.observeInfo}>{rise['0'].sunrise}</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.observeTitle}>日落</Text>
+                                    <Text style={styles.observeInfo}>{rise['0'].sunset}</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    }
+                    {air &&
+                        <View style={{ paddingLeft: 20, paddingRight: 20, flex: 1 }}>
+                            <View style={{ ...styles.borderBottom, ...styles.observeLine, flex: 1 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.observeTitle}>空气指数</Text>
+                                    <Text style={styles.observeInfo}>{air.aqi}</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.observeTitle}>空气质量</Text>
+                                    <Text style={styles.observeInfo}>{air.aqi_name}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    }
                     <View style={{ paddingLeft: 20, paddingRight: 20, flex: 1 }}>
                         <View style={{ ...styles.borderBottom, ...styles.observeLine, flex: 1 }}>
                             <View style={{ flex: 1 }}>
@@ -367,7 +533,7 @@ export default class FetchExample extends Component {
                         <View style={{ ...styles.observeLine, flex: 1 }}>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.observeTitle}>降水量</Text>
-                                <Text style={styles.observeInfo}>{observe.precipitation}%</Text>
+                                <Text style={styles.observeInfo}>{observe.precipitation * 100}%</Text>
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.observeTitle}>风速</Text>
@@ -384,12 +550,12 @@ export default class FetchExample extends Component {
     /**
      * 今日天气
      */
-    getTodayDegree = () => {
+    getTodayDegree = (item) => {
         const { weatherData } = this.state;
         if (!weatherData || !weatherData.forecast_24h) {
             return false;
         } else {
-            let { forecast_24h } = weatherData;
+            let { forecast_24h, forecast_1h } = weatherData;
             let today = forecast_24h[1];
             return (
                 <View style={{ ...styles.todayTop, paddingLeft: 20, paddingRight: 10 }} >
@@ -397,7 +563,15 @@ export default class FetchExample extends Component {
                         <Text style={styles.degreeNumberStyle}>{this.getDay(Date.now())} </Text>
                         <Text style={styles.weekNumberStyle - 4}> 今天</Text>
                     </View>
-                    <View style={{ flex: 1 }}></View>
+                    {forecast_1h.length === 0 &&
+                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
+                            <WeatherComponent weatherCode={item.day_weather_code}></WeatherComponent>
+                            <WeatherComponent weatherCode={item.night_weather_code}></WeatherComponent>
+                        </View>
+                    }
+                    {forecast_1h.length !== 0 &&
+                        <View style={{ flex: 1 }}></View>
+                    }
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end' }}>
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
                             <Text style={styles.degreeNumberStyle}>{today.max_degree} </Text>
@@ -481,8 +655,12 @@ export default class FetchExample extends Component {
     showAddress = () => {
         const { address_component } = this.state;
         let address_array = [];
+
         if (address_component.nation) {
             address_array.push(address_component.nation);
+        }
+        if (address_component.country) {
+            address_array.push(address_component.country);
         }
         if (address_component.province) {
             address_array.push(address_component.province);
@@ -495,6 +673,9 @@ export default class FetchExample extends Component {
         }
         if (address_component.district) {
             address_array.push(address_component.district);
+        }
+        if (address_component.tourist) {
+            address_array.push(address_component.tourist);
         }
         return address_array.slice(-2).join(' ');
     }
