@@ -180,10 +180,10 @@ export default class FetchExample extends Component {
     geolocation = () => {
         Geolocation.getCurrentPosition((info) => {
             let { coords } = info;
-            // coords = {
-            //     latitude: '29.66741302',
-            //     longitude: '106.56316441'
-            // };
+            coords = {
+                latitude: '29.66741302',
+                longitude: '106.56316441'
+            };
             this.setState({
                 latitude: coords.latitude,
                 longitude: coords.longitude
