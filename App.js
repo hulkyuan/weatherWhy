@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     View, Image, Text, StyleSheet, Dimensions,
     ScrollView, FlatList, SectionList, TouchableOpacity,
-    TextInput, SafeAreaView, Button
+    TextInput, SafeAreaView, Button, Animated, Easing
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
@@ -108,6 +108,9 @@ const styles = StyleSheet.create({
     },
     searchItem: {
         fontSize: 20, paddingTop: 15
+    },
+    windHumidity: {
+        padding: 5, position: "absolute", color: 'white', fontSize: 18
     }
 });
 const skyLine = {
@@ -143,6 +146,7 @@ const skyLine = {
 }
 const layer_w = 264;
 const layer_h = 910;
+const animtionDuration = 1000;
 
 export default class FetchExample extends Component {
 
@@ -176,10 +180,10 @@ export default class FetchExample extends Component {
     geolocation = () => {
         Geolocation.getCurrentPosition((info) => {
             let { coords } = info;
-            coords = {
-                latitude: '29.66741302',
-                longitude: '106.56316441'
-            };
+            // coords = {
+            //     latitude: '29.66741302',
+            //     longitude: '106.56316441'
+            // };
             this.setState({
                 latitude: coords.latitude,
                 longitude: coords.longitude
@@ -209,8 +213,6 @@ export default class FetchExample extends Component {
         });
     }
     weatherFecth = (location, type) => {
-
-
         this.setState({
             address_component: location
         });
@@ -264,10 +266,26 @@ export default class FetchExample extends Component {
             searchPanel: true
         });
     }
+    /**
+     * 城市搜索界面
+     */
     showSearchView = () => {
         const { searchText, list } = this.state;
+        // const fadeAnim = new Animated.Value(-500);
+        // Animated.timing(
+        //     fadeAnim,
+        //     {
+        //         toValue: 0,
+        //         duration: 200,
+        //     }
+        // ).start();
         return (
             <SafeAreaView style={styles.searchPanel}>
+                {/* <Animated.View
+                    style={{
+                        top: fadeAnim,
+                    }}
+                > */}
                 <View style={styles.searchBar}>
                     <View style={styles.searchInputContainer}>
                         <TextInput
@@ -289,7 +307,9 @@ export default class FetchExample extends Component {
                         renderItem={this.createSearchItem}
                     />
                 </View>
+                {/* </Animated.View> */}
             </SafeAreaView>
+
         );
     }
     createSearchItem = ({ item }) => {
@@ -336,6 +356,9 @@ export default class FetchExample extends Component {
         });
 
     }
+    /**
+     * 切换城市请求
+     */
     fecthCity = () => {
         const { searchText } = this.state;
         const param = {
@@ -386,12 +409,12 @@ export default class FetchExample extends Component {
                 }
                 <LinearGradient colors={['#50ade8', '#7ae0fa']} angle={-90}>
                     <View style={{ ...styles.section1, height: deviceHeight / 2 }}>
-                        <Text style={{ ...styles.lightColor, ...styles.font20 }}>
-                            <TouchableOpacity onPress={this.openCityView} >
+                        <TouchableOpacity onPress={this.openCityView} >
+                            <Text style={{ ...styles.lightColor, ...styles.font20 }}>
                                 <Location style={styles.iconStyle} fill="white" />
-                            </TouchableOpacity>
-                            {address_component && this.showAddress()}
-                        </Text>
+                                {address_component && this.showAddress()}
+                            </Text>
+                        </TouchableOpacity>
                         {this.showBreifObserve()}
                         <View style={styles.layer}>
                             <Image style={styles.layerImage} source={require('./assets/images/layer1.png')}></Image>
@@ -466,14 +489,63 @@ export default class FetchExample extends Component {
             return false;
         } else {
             const { observe, tips } = weatherData;
+
             return (
                 <View style={{ alignItems: "center", position: 'relative', zIndex: 999 }}>
                     <Text style={{ fontSize: 50, ...styles.lightColor, paddingTop: 10 }}>{observe.degree}°</Text>
                     <Text style={{ fontSize: 22, ...styles.lightColor, padding: 5 }}>{observe.weather_short}</Text>
+                    <View style={{ position: 'relative' }}>
+                        {/* {this.humidityAnimate(observe)} */}
+
+
+                        {/* <Text style={{ ...styles.windHumidity }}>{windCode[observe.wind_direction]} {observe.wind_power}级</Text> */}
+
+                    </View>
                     <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>{tips.observe[0]}</Text>
-                </View>
+                </View >
             );
         }
+    }
+    humidityAnimate = (observe) => {
+        const fadeIn = new Animated.Value(0);
+        const offsetTop = new Animated.Value(-20);
+        const fadeOut = new Animated.Value(1);
+        const backToZero = new Animated.Value(0);
+        let reverArray = [
+            { opacity: fadeIn, offset: offsetTop, targetAlpha: 1, targetOff: 0 },
+            { opacity: fadeOut, offset: backToZero, targetAlpha: 0, targetOff: -20 }
+        ];
+
+        Animated.parallel([
+            Animated.timing(
+                reverArray[0].opacity,
+                {
+                    toValue: reverArray[0].targetAlpha,
+                    duration: animtionDuration,
+                }
+            ),
+            Animated.timing(
+                reverArray[0].offset,
+                {
+                    toValue: reverArray[0].targetOff,
+                    duration: animtionDuration,
+                }
+            )
+        ]).start(() => {
+            reverArray.reverse();
+        });
+
+        return (
+            <Animated.View
+                style={{
+                    top: offsetTop,
+                    opacity: fadeIn,
+                    alignItems: 'center'
+                }}
+            >
+                <Text style={{ ...styles.windHumidity }}>湿度 {observe.humidity}%</Text>
+            </Animated.View>
+        );
     }
     //section1 end
     //section3 start
@@ -533,7 +605,7 @@ export default class FetchExample extends Component {
                         <View style={{ ...styles.observeLine, flex: 1 }}>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.observeTitle}>降水量</Text>
-                                <Text style={styles.observeInfo}>{observe.precipitation * 100}%</Text>
+                                <Text style={styles.observeInfo}>{Math.round(observe.precipitation * 100)}%</Text>
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.observeTitle}>风速</Text>
@@ -677,7 +749,13 @@ export default class FetchExample extends Component {
         if (address_component.tourist) {
             address_array.push(address_component.tourist);
         }
-        return address_array.slice(-2).join(' ');
+        if (address_array.length === 2) {
+            if (address_array[0] === address_array[1]) {
+                return address_array.slice(-1).join(' ');
+            }
+        } else {
+            return address_array.slice(-2).join(' ');
+        }
     }
     /**
      * 获取从当前时间到未来24小时天气
