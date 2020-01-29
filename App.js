@@ -310,7 +310,7 @@ export default class FetchExample extends Component {
                             <Button onPress={this.onCloseSearchPanel} title="取消" />
                         </View>
                     </View>
-                    <View style={{ padding: 5, paddingLeft: 20}}>
+                    <View style={{ padding: 5, paddingLeft: 20 }}>
                         <TouchableOpacity onPress={this.getCurrentLocation}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <NavigateIcon style={{ ...styles.iconStyle, paddingRight: 10 }} fill="lightblue" />
@@ -318,7 +318,7 @@ export default class FetchExample extends Component {
                             </View>
                         </TouchableOpacity>
                     </View>
-                    <View style={{borderBottomColor:'white',paddingBottom:1,borderBottomWidth:1,shadowOpacity:1, shadowColor: '#cccccc', shadowRadius: 1, shadowOffset: { height: 1 }}}></View>
+                    <View style={{ borderBottomColor: 'white', paddingBottom: 1, borderBottomWidth: 1, shadowOpacity: 1, shadowColor: '#cccccc', shadowRadius: 1, shadowOffset: { height: 1 } }}></View>
                     <View style={{ ...styles.searchList }}>
                         <FlatList
                             data={list}
@@ -471,16 +471,18 @@ export default class FetchExample extends Component {
                     ...item,
                     key: index.toString()
                 }
-            })
+            });
             return (
-                <SectionList
-                    renderItem={this.weekInfo}
-                    sections={[
-                        { data: forecast_24h.slice(0, 1), renderItem: this.overrideRenderItem },
-                        { title: 'yeah', data: forecast_24h.slice(1, forecast_24h.length) },
-                    ]}
-                    renderSectionHeader={this.getToday24Info}
-                />
+                <View>
+                    <SectionList
+                        renderItem={this.weekInfo}
+                        sections={[
+                            { data: forecast_24h.slice(0, 1), renderItem: this.overrideRenderItem },
+                            { title: 'yeah', data: forecast_24h.slice(1, forecast_24h.length) },
+                        ]}
+                        renderSectionHeader={this.getToday24Info}
+                    />
+                </View>
             );
 
         }
@@ -491,7 +493,7 @@ export default class FetchExample extends Component {
      */
     overrideRenderItem = ({ item }) => {
         return (
-            <View style={{ paddingTop: 20 }}>
+            <View style={{ paddingTop: 10,paddingBottom:10}}>
                 {this.getTodayDegree(item)}
                 {/* <View style={styles.today24hours}>
                     {this.getToday24Info()}
@@ -696,22 +698,26 @@ export default class FetchExample extends Component {
             })
             forecast_1h = forecast_1h.slice(0, 24);
             return (
-                <View style={{ ...styles.today24hours, backgroundColor: 'white' }}>
-                    <FlatList
-                        data={forecast_1h}
-                        horizontal={true}
-                        renderItem={({ item }) => {
-                            const hour = item.update_time.substring(8, 10);
-                            const min = item.update_time.substring(10, 12);
-                            return (
-                                <View style={{ alignItems: 'center', padding: 15, justifyContent: "space-around", borderTopColor: '#cccccc', borderBottomColor: '#cccccc', borderStyle: "solid", borderTopWidth: 1, borderBottomWidth: 1 }}>
-                                    <Text style={styles.degreeNumberStyle}>{hour}:{min}</Text>
-                                    <WeatherComponent weatherCode={item.weather_code}></WeatherComponent>
-                                    <Text style={styles.degreeNumberStyle}>{item.degree}°</Text>
-                                </View>
-                            );
-                        }}
-                    />
+                <View>
+                    <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
+                    <View style={{ ...styles.today24hours, backgroundColor: 'white' }}>
+                        <FlatList
+                            data={forecast_1h}
+                            horizontal={true}
+                            renderItem={({ item }) => {
+                                const hour = item.update_time.substring(8, 10);
+                                const min = item.update_time.substring(10, 12);
+                                return (
+                                    <View style={{ alignItems: 'center', padding: 15, justifyContent: "space-around" }}>
+                                        <Text style={styles.degreeNumberStyle}>{hour}:{min}</Text>
+                                        <WeatherComponent weatherCode={item.weather_code}></WeatherComponent>
+                                        <Text style={styles.degreeNumberStyle}>{item.degree}°</Text>
+                                    </View>
+                                );
+                            }}
+                        />
+                    </View>
+                    <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
                 </View>
             );
         }
