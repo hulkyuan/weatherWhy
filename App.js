@@ -7,6 +7,7 @@ import {
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
 import Location from './assets/images/svg/ios-pin.svg';
+import NavigateIcon from './assets/images/svg/ios-navigate.svg'
 import LinearGradient from 'react-native-linear-gradient';
 import WeatherComponent from './WeatherComponent';
 import { windCode } from './WeatherConfig';
@@ -89,10 +90,10 @@ const styles = StyleSheet.create({
         borderBottomColor: '#cccccc', borderBottomWidth: 1
     },
     searchPanel: {
-        width: '100%', height: '100%', backgroundColor: 'white', position: 'absolute', top: 0, left: 0, zIndex: 999
+        width: '100%', height: '100%', backgroundColor: 'white', position: 'absolute', top: 0, left: 0, zIndex: 999,
     },
     searchBar: {
-        paddingLeft: 20, flexDirection: 'row', alignItems: 'center', height: 50,
+        paddingLeft: 20, flexDirection: 'row', alignItems: 'center', height: 60, paddingTop: 10
     },
     searchInputContainer: {
         flex: 4
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     searchList: {
-        flex: 4, padding: 20, paddingLeft: 30
+        flex: 1, paddingLeft: 30
     },
     searchItem: {
         fontSize: 20, paddingTop: 15
@@ -212,6 +213,10 @@ export default class FetchExample extends Component {
                 })
         });
     }
+    getCurrentLocation = () => {
+        this.onCloseSearchPanel();
+        this.geolocation();
+    }
     weatherFecth = (location, type) => {
         this.setState({
             address_component: location
@@ -286,27 +291,42 @@ export default class FetchExample extends Component {
                         top: fadeAnim,
                     }}
                 > */}
-                <View style={styles.searchBar}>
-                    <View style={styles.searchInputContainer}>
-                        <TextInput
-                            placeholder="搜索地区"
-                            onChangeText={this.onChangeText}
-                            style={styles.searchInput}
-                            value={searchText}
-                            autoFocus={true}
-                            clearButtonMode="always"
+                <View style={{ flex: 1 }}>
+                    <View style={{ alignItems: 'center', paddingTop: 10 }}>
+                        <Text style={{ fontSize: 16 }}>输入城市,旅游景点名或海外城市</Text>
+                    </View>
+                    <View style={styles.searchBar}>
+                        <View style={styles.searchInputContainer}>
+                            <TextInput
+                                placeholder="搜索地区"
+                                onChangeText={this.onChangeText}
+                                style={styles.searchInput}
+                                value={searchText}
+                                autoFocus={true}
+                                clearButtonMode="always"
+                            />
+                        </View>
+                        <View style={styles.searchCloseBtn}>
+                            <Button onPress={this.onCloseSearchPanel} title="取消" />
+                        </View>
+                    </View>
+                    <View style={{ padding: 5, paddingLeft: 20}}>
+                        <TouchableOpacity onPress={this.getCurrentLocation}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <NavigateIcon style={{ ...styles.iconStyle, paddingRight: 10 }} fill="lightblue" />
+                                <Text>获取当前位置</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{borderBottomColor:'white',paddingBottom:1,borderBottomWidth:1,shadowOpacity:1, shadowColor: '#cccccc', shadowRadius: 1, shadowOffset: { height: 1 }}}></View>
+                    <View style={{ ...styles.searchList }}>
+                        <FlatList
+                            data={list}
+                            renderItem={this.createSearchItem}
                         />
                     </View>
-                    <View style={styles.searchCloseBtn}>
-                        <Button onPress={this.onCloseSearchPanel} title="取消" />
-                    </View>
                 </View>
-                <View style={styles.searchList}>
-                    <FlatList
-                        data={list}
-                        renderItem={this.createSearchItem}
-                    />
-                </View>
+
                 {/* </Animated.View> */}
             </SafeAreaView>
 
