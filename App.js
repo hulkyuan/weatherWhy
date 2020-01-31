@@ -448,14 +448,20 @@ export default class FetchExample extends Component {
                     </View>
                 </LinearGradient>
                 {/* 底部天气界面部分 */}
-                <ScrollView >
-                    <View style={styles.section2}>
-                        {this.createListItem()}
-                    </View>
-                    <View style={styles.section3}>
-                        {this.showMoreObserve()}
-                    </View>
-                </ScrollView>
+                <FlatList
+                    ListHeaderComponent={
+                        <View style={styles.section2}>
+                            {this.createListItem()}
+                        </View>
+                    }
+                    ListFooterComponent={
+                        <View style={styles.section3}>
+                            {this.showMoreObserve()}
+                        </View>
+                    }
+                    style={{zIndex:999}}
+                >
+                </FlatList>
             </View >
         );
     }
@@ -493,7 +499,7 @@ export default class FetchExample extends Component {
      */
     overrideRenderItem = ({ item }) => {
         return (
-            <View style={{ paddingTop: 10,paddingBottom:10}}>
+            <View style={{ paddingTop: 10, paddingBottom: 10 }}>
                 {this.getTodayDegree(item)}
                 {/* <View style={styles.today24hours}>
                     {this.getToday24Info()}
