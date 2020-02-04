@@ -29,5 +29,30 @@ const windCode = {
     '7': '西北风',
     '8': '北风',
 }
-
-export { weatherConfig, windCode };
+const skyLine = {
+    day: {
+        d1: {
+            colors: ['#86c3ca', '#b5e9e8']
+        },
+        d2: {
+            colors: ['#43697f', '#abd2d7']
+        },
+        d3: {
+            colors: ['#67a1dc', '#a8e0f7']
+        },
+        d4: {
+            colors: ['#9b9b96', '#c1c1bc']
+        },
+        d5: {
+            colors: ['#c09461', '#eedfa1']
+        },
+        d6: {
+            colors: ['#50ade8', '#7ae0fa']
+        },
+        d7: {
+            colors: ['#81aedc', '#a9def1']
+        }
+    },
+    deg: -90
+}
+export { weatherConfig, windCode, skyLine };
