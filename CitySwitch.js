@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import {
     View, Text, StyleSheet,
-    FlatList, TouchableOpacity,ActivityIndicator,
-    TextInput, SafeAreaView, Button, Animated, Easing
+    FlatList, TouchableOpacity, ActivityIndicator,
+    TextInput, SafeAreaView, Button,
 } from 'react-native';
 import queryString from 'query-string';
 import NavigateIcon from './assets/images/svg/ios-navigate.svg'
@@ -27,10 +27,10 @@ const styles = StyleSheet.create({
         flex: 1
     },
     searchList: {
-        flex: 1, paddingLeft: 30
+        flex: 1, paddingLeft: 30, paddingTop: 15
     },
     searchItem: {
-        fontSize: 20, paddingTop: 15
+        fontSize: 20, paddingBottom: 15
     }
 });
 
@@ -40,9 +40,6 @@ export default class CitySwitch extends Component {
          * 查询城市source=xw&city=??
          */
     matchApi = 'https://wis.qq.com/city/matching';
-    weatherCommonApi = "https://wis.qq.com/weather/common";//china weather
-    weatherTouristApi = 'https://wis.qq.com/weather/tourist';//tourist weather
-    weatherExternalApi = 'https://wis.qq.com/weather/external';//external weather
     constructor(props) {
         super(props);
         this.state = {
@@ -50,17 +47,13 @@ export default class CitySwitch extends Component {
             list: [],
             heartBeat: 500,
             source: 'xw',
+            result: ''
         }
     }
     render() {
-        const { searchText, list } = this.state;
+        const { searchText, list, result, loading } = this.state;
         return (
             <SafeAreaView style={styles.searchPanel}>
-                {/* <Animated.View
-                    style={{
-                        top: fadeAnim,
-                    }}
-                > */}
                 <View style={{ flex: 1 }}>
                     <View style={{ alignItems: 'center', paddingTop: 10 }}>
                         <Text style={{ fontSize: 16 }}>输入城市,旅游景点名或海外城市</Text>
@@ -89,15 +82,24 @@ export default class CitySwitch extends Component {
                         </TouchableOpacity>
                     </View>
                     <View style={{ borderBottomColor: 'white', paddingBottom: 1, borderBottomWidth: 1, shadowOpacity: 1, shadowColor: '#cccccc', shadowRadius: 1, shadowOffset: { height: 1 } }}></View>
+
                     <View style={{ ...styles.searchList }}>
-                        <FlatList
-                            data={list}
-                            renderItem={this.createSearchItem}
-                        />
+                        {loading &&
+                            <View >
+                                <ActivityIndicator size="small" color="lightblue" />
+                            </View>
+                        }
+                        {result !== '' &&
+                            <Text>{result}</Text>
+                        }
+                        {result === '' &&
+                            <FlatList
+                                data={list}
+                                renderItem={this.createSearchItem}
+                            />
+                        }
                     </View>
                 </View>
-
-                {/* </Animated.View> */}
             </SafeAreaView>
 
         );
@@ -130,68 +132,19 @@ export default class CitySwitch extends Component {
             }
         }
         this.props.onCloseSearchPanel();
-        this.weatherFecth(data, item.type);
-    }
-    weatherFecth = (location, type) => {
-        // this.setState({
-        //     address_component: location
-        // });
-        this.setOuterState({
-            address_component: location
-        });
-        let url, info;
-        if (type === 'tourist') {
-            url = this.weatherTouristApi;
-            info = 'forecast_1h|forecast_24h|tips|observe|rise';
-        } else if (type === "external") {
-            url = this.weatherExternalApi;
-            info = 'forecast_24h|tips|observe|rise';
-        } else {
-            url = this.weatherCommonApi;
-            info = 'forecast_1h|forecast_24h|index|alarm|limit|tips|air|observe|rise';
-        }
-        const param = {
-            source: this.state.source,
-            weather_type: info,
-            ...location,
-        }
-        //console.log(location,type,url);
-        fetch(url + `?${queryString.stringify(param)}`)
-            .then((response) => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Network response was not ok.');
-                }
-            })
-            .then((responseJson) => {
-                this.reBuildForecast(responseJson.data);
-            })
-    }
-    reBuildForecast = (data) => {
-        let { forecast_24h, forecast_1h } = data;
-        let forecast_arr24 = [];
-        let forecast_arr1 = []
-        for (let i in forecast_24h) {
-            forecast_arr24.push(forecast_24h[i]);
-        }
-        for (let i in forecast_1h) {
-            forecast_arr1.push(forecast_1h[i]);
-        }
-        data.forecast_24h = forecast_arr24;
-        data.forecast_1h = forecast_arr1;
-        // this.setState({
-        //     weatherData: data
-        // })
-        this.setOuterState({
-            weatherData: data
-        });
+        this.props.weatherFecth(data, item.type);
     }
     onChangeText = (text) => {
         clearTimeout(this.queryTimeout);
         this.setState({
             searchText: text
         }, () => {
+            if (!text) {
+                this.setState({
+                    result: ''
+                })
+                return;
+            }
             this.queryTimeout = setTimeout(this.fecthCity, this.state.heartBeat);
         });
 
@@ -208,6 +161,9 @@ export default class CitySwitch extends Component {
             source: this.state.source,
             city: searchText
         }
+        this.setState({
+            loading: true
+        });
         fetch(this.matchApi + `?${queryString.stringify(param)}`)
             .then((response) => {
                 if (response.ok) {
@@ -229,7 +185,9 @@ export default class CitySwitch extends Component {
                         }
                     }
                     this.setState({
-                        list
+                        list,
+                        result: list.length === 0 ? '未找到结果' : '',
+                        loading: false
                     });
                 }
             })

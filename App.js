@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import {
     View, Image, Text, StyleSheet, Dimensions,
-    ScrollView, FlatList, SectionList, TouchableOpacity,
-    TextInput, SafeAreaView, Button, Animated, Easing
+    FlatList, SectionList, TouchableOpacity,
+    Animated
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
 });
 const layer_w = 264;
 const layer_h = 910;
-const animtionDuration = 1000;
+const animtionDuration = 500;
 
 export default class FetchExample extends Component {
     weatherCommonApi = "https://wis.qq.com/weather/common";//china weather
@@ -212,8 +212,6 @@ export default class FetchExample extends Component {
         });
     }
 
-
-
     onCloseSearchPanel = () => {
         this.setState({
             searchPanel: false
@@ -229,15 +227,12 @@ export default class FetchExample extends Component {
         styles.layer = {
             ...styles.layer,
         }
+
         return (
             <View style={{ position: "relative", flex: 1 }}>
                 {
                     searchPanel &&
-                    <CitySwtich
-                        setOuterState={this.setOuterState}
-                        onCloseSearchPanel={this.onCloseSearchPanel}
-                        getCurrentLocation={this.getCurrentLocation}
-                    ></CitySwtich>
+                    this.fadeInCity()
                 }
                 <LinearGradient colors={['#50ade8', '#7ae0fa']} angle={-90}>
                     <View style={{ ...styles.section1, height: deviceHeight / 2 }}>
@@ -274,6 +269,33 @@ export default class FetchExample extends Component {
                 >
                 </FlatList>
             </View >
+        );
+    }
+    fadeInCity = () => {
+        const fadeIn = new Animated.Value(1);
+        const offsetTop = new Animated.Value(-20);
+        const fadeOut = new Animated.Value(0);
+        const backToZero = new Animated.Value(0);
+        // Animated.timing(
+        //     fadeOut,
+        //     {
+        //         toValue: fadeIn,
+        //         duration: 1000,
+        //     }
+        // ).start();
+        return (
+            // <Animated.View
+            //     style={{
+            //         opacity: fadeOut,
+            //     }}
+            // >
+                <CitySwtich
+                    setOuterState={this.setOuterState}
+                    onCloseSearchPanel={this.onCloseSearchPanel}
+                    getCurrentLocation={this.getCurrentLocation}
+                    weatherFecth={this.weatherFecth}
+                />
+            // </Animated.View>
         );
     }
     setOuterState = (data) => {
