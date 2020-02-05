@@ -10,22 +10,25 @@ import Location from './assets/images/svg/ios-pin.svg';
 import CitySwtich from './CitySwitch';
 import LinearGradient from 'react-native-linear-gradient';
 import WeatherComponent from './WeatherComponent';
-import { windCode } from './WeatherConfig';
-
+import { windCode, skyLine, skyCode } from './WeatherConfig';
+import moment from 'moment';
 const styles = StyleSheet.create({
     section1: {
-        //flex: 5,
         position: 'relative', alignItems: "center", width: '100%', paddingTop: 40
     },
     layer: {
         width: "100%",
+        height: '100%',
         position: "absolute",
-        bottom: 0
+        bottom: 0,
+        //alignItems: 'flex-end',
+        justifyContent: "flex-end",
     },
     layerImage: {
         width: '100%',
-        height: 132,
-        // resizeMode:'contain'
+        height: 264,
+        //backgroundColor:'grey',
+        //resizeMode: 'contain'
     },
     section2: {
         flex: 4,
@@ -96,7 +99,7 @@ const styles = StyleSheet.create({
 });
 const layer_w = 264;
 const layer_h = 910;
-const animtionDuration = 500;
+const animtionDuration = 200;
 
 export default class FetchExample extends Component {
     weatherCommonApi = "https://wis.qq.com/weather/common";//china weather
@@ -113,6 +116,8 @@ export default class FetchExample extends Component {
             searchPanel: false,
             source: 'xw',
             type: 'common', //3种天气请求类型
+            day: skyLine.day.C2,
+            isDay: true,//是否是白天
         }
     }
     componentDidMount() {
@@ -198,45 +203,40 @@ export default class FetchExample extends Component {
         data.forecast_1h = forecast_arr1;
         this.setState({
             weatherData: data
+        }, () => {
+            this.renderSky();
         })
     }
     getCurrentLocation = () => {
         this.onCloseSearchPanel();
         this.geolocation();
     }
-
-
     openCityView = (event) => {
         this.setState({
             searchPanel: true
         });
     }
-
     onCloseSearchPanel = () => {
         this.setState({
             searchPanel: false
         })
     }
-
     render() {
-        const _hscale = Dimensions.get('window').height / layer_h;
-        const deviceHeight = Dimensions.get('window').height;
         //{"fontScale": 1, "height": 896, "scale": 2, "width": 414}
-        const _hoffset = Math.ceil(_hscale * layer_w - layer_w);
-        const { address_component, searchPanel } = this.state;
+        const { height, scale } = Dimensions.get('window');
+        const { address_component, searchPanel, day } = this.state;
         styles.layer = {
             ...styles.layer,
         }
-
         return (
             <View style={{ position: "relative", flex: 1 }}>
                 {
                     searchPanel &&
                     this.fadeInCity()
                 }
-                <LinearGradient colors={['#50ade8', '#7ae0fa']} angle={-90}>
-                    <View style={{ ...styles.section1, height: deviceHeight / 2 }}>
-                        <TouchableOpacity onPress={this.openCityView} >
+                <LinearGradient colors={day.colors} angle={skyLine.deg}>
+                    <View style={{ ...styles.section1, height: height / 2 }}>
+                        <TouchableOpacity onPress={this.openCityView} style={{zIndex:199}} >
                             <Text style={{ ...styles.lightColor, ...styles.font20 }}>
                                 <Location style={styles.iconStyle} fill="white" />
                                 {address_component && this.showAddress()}
@@ -244,13 +244,13 @@ export default class FetchExample extends Component {
                         </TouchableOpacity>
                         {this.showBreifObserve()}
                         <View style={styles.layer}>
-                            <Image style={styles.layerImage} source={require('./assets/images/layer1.png')}></Image>
+                            <Image style={{ ...styles.layerImage, height: day.layer3.height / scale }} source={{ uri: day.layer3.uri, cache: 'force-cache' }}></Image>
                         </View>
                         <View style={styles.layer}>
-                            <Image style={styles.layerImage} source={require('./assets/images/layer2.png')}></Image>
+                            <Image style={{ ...styles.layerImage, height: day.layer2.height / scale }} source={{ uri: day.layer2.uri, cache: 'force-cache' }}></Image>
                         </View>
                         <View style={styles.layer}>
-                            <Image style={styles.layerImage} source={require('./assets/images/layer3.png')}></Image>
+                            <Image style={{ ...styles.layerImage, height: day.layer1.height / scale }} source={{ uri: day.layer1.uri, cache: 'force-cache' }}></Image>
                         </View>
                     </View>
                 </LinearGradient>
@@ -271,31 +271,84 @@ export default class FetchExample extends Component {
             </View >
         );
     }
+    renderSky = () => {
+        let isDay = true;
+        const { weatherData } = this.state;
+        let d = weatherData ? skyCode[weatherData.observe.weather_code] : "C2";
+        weatherData.air && weatherData.air.aqi > 200 && "C7" !== d && (d = "C6");
+        if (weatherData.rise) {
+            const { rise } = weatherData;
+            if(!rise[0]){
+                this.setState({
+                    day: skyLine.day[d]
+                })
+                return ;
+            }
+            const { sunrise, sunset } = rise[0];
+            const { update_time } = weatherData.observe;
+            const now = moment();
+            const update = moment(update_time, 'YYYYMMDDHHmmss');
+            isDay = update.isSame(sunrise.time, "day") && now.isAfter(moment(sunrise, 'HH:mm'), 'minute') && now.isBefore(moment(sunset, 'HH:mm'), 'minute');
+        }
+        if (isDay) {
+            this.setState({
+                day: skyLine.day[d]
+            })
+        }else{
+            this.setState({
+                day: skyLine.night['C9']
+            })
+        }
+        //console.log(weatherData.observe.weather_code,d,isDay);
+
+    }
     fadeInCity = () => {
-        const fadeIn = new Animated.Value(1);
-        const offsetTop = new Animated.Value(-20);
-        const fadeOut = new Animated.Value(0);
+        const fadeIn = new Animated.Value(0);
+        const offsetTop = new Animated.Value(100);
+        const fadeOut = new Animated.Value(1);
         const backToZero = new Animated.Value(0);
-        // Animated.timing(
-        //     fadeOut,
-        //     {
-        //         toValue: fadeIn,
-        //         duration: 1000,
-        //     }
-        // ).start();
+        let reverArray = [
+            { opacity: fadeIn, offset: offsetTop, targetAlpha: 1, targetOff: 0 },
+            { opacity: fadeOut, offset: backToZero, targetAlpha: 0, targetOff: 100 }
+        ];
+
+        Animated.parallel([
+            Animated.timing(
+                reverArray[0].opacity,
+                {
+                    toValue: reverArray[0].targetAlpha,
+                    duration: animtionDuration,
+                }
+            ),
+            Animated.timing(
+                reverArray[0].offset,
+                {
+                    toValue: reverArray[0].targetOff,
+                    duration: animtionDuration,
+                }
+            )
+        ]).start();
+        console.log(222);
         return (
-            // <Animated.View
-            //     style={{
-            //         opacity: fadeOut,
-            //     }}
-            // >
+            <Animated.View
+                style={{
+                    top: 0,
+                    opacity: fadeIn,
+                    position: 'absolute',
+                    left: offsetTop,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'white',
+                    zIndex: 999
+                }}
+            >
                 <CitySwtich
                     setOuterState={this.setOuterState}
                     onCloseSearchPanel={this.onCloseSearchPanel}
                     getCurrentLocation={this.getCurrentLocation}
                     weatherFecth={this.weatherFecth}
                 />
-            // </Animated.View>
+            </Animated.View>
         );
     }
     setOuterState = (data) => {
@@ -543,25 +596,29 @@ export default class FetchExample extends Component {
             forecast_1h = forecast_1h.slice(0, 24);
             return (
                 <View>
-                    <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
-                    <View style={{ ...styles.today24hours, backgroundColor: 'white' }}>
-                        <FlatList
-                            data={forecast_1h}
-                            horizontal={true}
-                            renderItem={({ item }) => {
-                                const hour = item.update_time.substring(8, 10);
-                                const min = item.update_time.substring(10, 12);
-                                return (
-                                    <View style={{ alignItems: 'center', padding: 15, justifyContent: "space-around" }}>
-                                        <Text style={styles.degreeNumberStyle}>{hour}:{min}</Text>
-                                        <WeatherComponent weatherCode={item.weather_code}></WeatherComponent>
-                                        <Text style={styles.degreeNumberStyle}>{item.degree}°</Text>
-                                    </View>
-                                );
-                            }}
-                        />
-                    </View>
-                    <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
+                    {forecast_1h.length > 0 &&
+                        <View>
+                            <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
+                            <View style={{ ...styles.today24hours, backgroundColor: 'white' }}>
+                                <FlatList
+                                    data={forecast_1h}
+                                    horizontal={true}
+                                    renderItem={({ item }) => {
+                                        const hour = item.update_time.substring(8, 10);
+                                        const min = item.update_time.substring(10, 12);
+                                        return (
+                                            <View style={{ alignItems: 'center', padding: 15, justifyContent: "space-around" }}>
+                                                <Text style={styles.degreeNumberStyle}>{hour}:{min}</Text>
+                                                <WeatherComponent weatherCode={item.weather_code}></WeatherComponent>
+                                                <Text style={styles.degreeNumberStyle}>{item.degree}°</Text>
+                                            </View>
+                                        );
+                                    }}
+                                />
+                            </View>
+                            <View style={{ borderBottomColor: '#cccccc', borderBottomWidth: 1 }}></View>
+                        </View>
+                    }
                 </View>
             );
         }
