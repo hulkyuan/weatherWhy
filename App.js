@@ -228,6 +228,8 @@ export default class FetchExample extends Component {
         styles.layer = {
             ...styles.layer,
         }
+        const layer2uri=day.layer2.uri.toString();
+        console.log(layer2uri,222);
         return (
             <View style={{ position: "relative", flex: 1 }}>
                 {
@@ -236,7 +238,7 @@ export default class FetchExample extends Component {
                 }
                 <LinearGradient colors={day.colors} angle={skyLine.deg}>
                     <View style={{ ...styles.section1, height: height / 2 }}>
-                        <TouchableOpacity onPress={this.openCityView} style={{zIndex:199}} >
+                        <TouchableOpacity onPress={this.openCityView} style={{ zIndex: 199 }} >
                             <Text style={{ ...styles.lightColor, ...styles.font20 }}>
                                 <Location style={styles.iconStyle} fill="white" />
                                 {address_component && this.showAddress()}
@@ -252,6 +254,7 @@ export default class FetchExample extends Component {
                         <View style={styles.layer}>
                             <Image style={{ ...styles.layerImage, height: day.layer1.height / scale }} source={{ uri: day.layer1.uri, cache: 'force-cache' }}></Image>
                         </View>
+                        
                     </View>
                 </LinearGradient>
                 {/* 底部天气界面部分 */}
@@ -278,11 +281,11 @@ export default class FetchExample extends Component {
         weatherData.air && weatherData.air.aqi > 200 && "C7" !== d && (d = "C6");
         if (weatherData.rise) {
             const { rise } = weatherData;
-            if(!rise[0]){
+            if (!rise[0]) {
                 this.setState({
                     day: skyLine.day[d]
                 })
-                return ;
+                return;
             }
             const { sunrise, sunset } = rise[0];
             const { update_time } = weatherData.observe;
@@ -294,13 +297,11 @@ export default class FetchExample extends Component {
             this.setState({
                 day: skyLine.day[d]
             })
-        }else{
+        } else {
             this.setState({
                 day: skyLine.night['C9']
             })
         }
-        //console.log(weatherData.observe.weather_code,d,isDay);
-
     }
     fadeInCity = () => {
         const fadeIn = new Animated.Value(0);
