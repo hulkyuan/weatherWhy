@@ -228,8 +228,6 @@ export default class FetchExample extends Component {
         styles.layer = {
             ...styles.layer,
         }
-        const layer2uri=day.layer2.uri.toString();
-        console.log(layer2uri,222);
         return (
             <View style={{ position: "relative", flex: 1 }}>
                 {
@@ -329,7 +327,6 @@ export default class FetchExample extends Component {
                 }
             )
         ]).start();
-        console.log(222);
         return (
             <Animated.View
                 style={{
@@ -686,19 +683,6 @@ export default class FetchExample extends Component {
         } else {
             return address_array.slice(-2).join(' ');
         }
-    }
-    /**
-     * 获取从当前时间到未来24小时天气
-     */
-    getFromNowToNext24Hours = () => {
-        const now = new Date().getHours();
-        const { weatherData } = this.state;
-        if (!weatherData || !weatherData.forecast_1h) {
-            return false;
-        } else {
-            const { forecast_1h } = this.state.weatherData;
-        }
-
     }
     /**
      * 显示工作日
