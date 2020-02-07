@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     View, Image, Text, StyleSheet, Dimensions,
     FlatList, SectionList, TouchableOpacity,
-    Animated
+    Animated, Platform,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';
@@ -21,14 +21,10 @@ const styles = StyleSheet.create({
         height: '100%',
         position: "absolute",
         bottom: 0,
-        //alignItems: 'flex-end',
         justifyContent: "flex-end",
     },
     layerImage: {
         width: '100%',
-        height: 264,
-        //backgroundColor:'grey',
-        //resizeMode: 'contain'
     },
     section2: {
         flex: 4,
@@ -94,11 +90,12 @@ const styles = StyleSheet.create({
         borderBottomColor: '#cccccc', borderBottomWidth: 1
     },
     windHumidity: {
-        padding: 5, position: "absolute", color: 'white', fontSize: 18
+        padding: 5, color: 'white', fontSize: 18
+    },
+    poetry: {
+        padding: 5, color: 'white', fontSize: 18
     }
 });
-const layer_w = 264;
-const layer_h = 910;
 const animtionDuration = 200;
 
 export default class FetchExample extends Component {
@@ -118,18 +115,43 @@ export default class FetchExample extends Component {
             type: 'common', //3种天气请求类型
             day: skyLine.day.C2,
             isDay: true,//是否是白天
+            fadeAnim: new Animated.Value(0),
+            offsetStartY: 0,
+            offsetEndY: 0,
+            point: 200,
+            scale: 2,
+            phoneVersion: 7
         }
     }
     componentDidMount() {
         this.geolocation();
+        this.phoneDimension();
+    }
+    /**
+     * iphoneXSMAX,XR,11:   896*414 @3x except:xr@2x
+     * iphoneX,XS:          812*375   @3x
+     * iphone6,7,8plus:     736*414  @3x
+     * iphone6,7,8:         667*375  @2x
+     * 
+     * 本地测试采用ip11开发
+     */
+    phoneDimension = () => {
+        const h = Dimensions.get('window').height;
+        if (h === 896) {
+
+        }
     }
     geolocation = () => {
         Geolocation.getCurrentPosition((info) => {
             let { coords } = info;
-            coords = {
-                latitude: '29.66741302',
-                longitude: '106.56316441'
-            };
+            // console.log(coords);
+            //模拟器gps处理
+            if (coords.latitude === 37.785834) {
+                coords = {
+                    latitude: '29.66741302',
+                    longitude: '106.56316441'
+                };
+            }
             this.setState({
                 latitude: coords.latitude,
                 longitude: coords.longitude
@@ -223,8 +245,8 @@ export default class FetchExample extends Component {
     }
     render() {
         //{"fontScale": 1, "height": 896, "scale": 2, "width": 414}
-        const { height, scale } = Dimensions.get('window');
-        const { address_component, searchPanel, day } = this.state;
+        const { height } = Dimensions.get('window');
+        const { address_component, searchPanel, day, fadeAnim, point, scale } = this.state;
         styles.layer = {
             ...styles.layer,
         }
@@ -234,32 +256,53 @@ export default class FetchExample extends Component {
                     searchPanel &&
                     this.fadeInCity()
                 }
-                <LinearGradient colors={day.colors} angle={skyLine.deg}>
-                    <View style={{ ...styles.section1, height: height / 2 }}>
-                        <TouchableOpacity onPress={this.openCityView} style={{ zIndex: 199 }} >
-                            <Text style={{ ...styles.lightColor, ...styles.font20 }}>
-                                <Location style={styles.iconStyle} fill="white" />
-                                {address_component && this.showAddress()}
-                            </Text>
-                        </TouchableOpacity>
-                        {this.showBreifObserve()}
-                        <View style={styles.layer}>
-                            <Image style={{ ...styles.layerImage, height: day.layer3.height / scale }} source={{ uri: day.layer3.uri, cache: 'force-cache' }}></Image>
+                <View style={{ paddingTop: 40, position: 'absolute', zIndex: 199, alignItems: 'center', width: '100%' }}>
+                    <TouchableOpacity onPress={this.openCityView}  >
+                        <Text style={{ ...styles.lightColor, ...styles.font20 }}>
+                            <Location style={styles.iconStyle} fill="white" />
+                            {address_component && this.showAddress()}
+                        </Text>
+                    </TouchableOpacity>
+                    {this.showBreifObserve()}
+                </View>
+                <Animated.View
+                    style={{
+                        height: fadeAnim.interpolate({
+                            inputRange: [0, point],
+                            outputRange: [height / 2, height / 1.8]
+                        }),
+                        //height: height / 2,
+                        zIndex: 0,
+                        position: 'absolute',
+                        width: '100%'
+                    }}
+                >
+                    <LinearGradient colors={day.colors} angle={skyLine.deg}>
+                        <View style={{ ...styles.section1, height: '100%' }} >
+                            <View style={styles.layer}>
+                                <Image style={{ ...styles.layerImage, height: day.layer3.height / scale }} source={{ uri: day.layer3.uri, cache: 'force-cache' }}></Image>
+                            </View>
+                            <View style={styles.layer}>
+                                <Image style={{ ...styles.layerImage, height: day.layer2.height / scale }} source={{ uri: day.layer2.uri, cache: 'force-cache' }}></Image>
+                            </View>
+                            <View style={styles.layer}>
+                                <Image style={{ ...styles.layerImage, height: day.layer1.height / scale }} source={{ uri: day.layer1.uri, cache: 'force-cache' }}></Image>
+                            </View>
                         </View>
-                        <View style={styles.layer}>
-                            <Image style={{ ...styles.layerImage, height: day.layer2.height / scale }} source={{ uri: day.layer2.uri, cache: 'force-cache' }}></Image>
-                        </View>
-                        <View style={styles.layer}>
-                            <Image style={{ ...styles.layerImage, height: day.layer1.height / scale }} source={{ uri: day.layer1.uri, cache: 'force-cache' }}></Image>
-                        </View>
-                        
-                    </View>
-                </LinearGradient>
+                    </LinearGradient>
+                </Animated.View>
                 {/* 底部天气界面部分 */}
-                <FlatList
+                <Animated.FlatList
+                    style={{
+                        zIndex: 99,
+                        position: 'relative',
+                    }}
                     ListHeaderComponent={
-                        <View style={styles.section2}>
-                            {this.createListItem()}
+                        <View>
+                            <View style={{ height: height / 2, }}></View>
+                            <View style={{ ...styles.section2, }}>
+                                {this.createListItem()}
+                            </View>
                         </View>
                     }
                     ListFooterComponent={
@@ -267,11 +310,17 @@ export default class FetchExample extends Component {
                             {this.showMoreObserve()}
                         </View>
                     }
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { x: this._scrollX } } }],
+                        { listener: this.fadeOutBackground },
+                    )}
+
                 >
-                </FlatList>
+                </Animated.FlatList>
             </View >
         );
     }
+
     renderSky = () => {
         let isDay = true;
         const { weatherData } = this.state;
@@ -401,64 +450,100 @@ export default class FetchExample extends Component {
      * 顶部信息
      */
     showBreifObserve = () => {
-        const { weatherData } = this.state;
+        const { weatherData, fadeAnim, point } = this.state;
         if (!weatherData || !weatherData.observe) {
             return false;
         } else {
             const { observe, tips } = weatherData;
 
             return (
-                <View style={{ alignItems: "center", position: 'relative', zIndex: 999 }}>
-                    <Text style={{ fontSize: 50, ...styles.lightColor, paddingTop: 10 }}>{observe.degree}°</Text>
-                    <Text style={{ fontSize: 22, ...styles.lightColor, padding: 5 }}>{observe.weather_short}</Text>
-                    <View style={{ position: 'relative' }}>
-                        {/* {this.humidityAnimate(observe)} */}
-
-
-                        {/* <Text style={{ ...styles.windHumidity }}>{windCode[observe.wind_direction]} {observe.wind_power}级</Text> */}
-
-                    </View>
-                    <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>{tips.observe[0]}</Text>
-                </View >
+                <View style={{
+                    alignItems: "center",
+                    position: 'relative',
+                    zIndex: 99,
+                }}>
+                    <Animated.View
+                        style={{
+                            alignItems: "center",
+                            opacity: fadeAnim.interpolate({
+                                inputRange: [0, point / 2],
+                                outputRange: [1, 0]
+                            })
+                        }}
+                    >
+                        <Text style={{ fontSize: 50, ...styles.lightColor, paddingTop: 10 }}>{observe.degree}°</Text>
+                        <Text style={{ fontSize: 22, ...styles.lightColor, padding: 5 }}>{observe.weather_short}</Text>
+                        <View style={{ position: 'relative' }}>
+                            {this.humidityAnimate(observe)}
+                            {/* <Text style={{ ...styles.windHumidity }}>{windCode[observe.wind_direction]} {observe.wind_power}级</Text> */}
+                        </View>
+                        <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>{tips.observe[0]}</Text>
+                    </Animated.View>
+                    <Animated.View
+                        style={{
+                            position: 'absolute',
+                            top: 10,
+                            alignItems: "flex-end",
+                            opacity: fadeAnim.interpolate({
+                                inputRange: [point / 2, point],
+                                outputRange: [0, 1]
+                            })
+                        }}
+                    >
+                        <Text style={{ ...styles.poetry }}>孤夜闻风啸，霜冻满江城</Text>
+                        <Text style={{ ...styles.poetry }}>冬风卷残叶，望南思王君</Text>
+                        <Text style={{ ...styles.poetry, fontSize: 14 }}>二流码农袁飘飘</Text>
+                    </Animated.View>
+                </View>
             );
         }
+    }
+    fadeOutBackground = (event) => {
+        //console.log(event.nativeEvent)
+        this.setState({
+            fadeAnim: new Animated.Value(event.nativeEvent.contentOffset.y)
+        });
     }
     humidityAnimate = (observe) => {
         const fadeIn = new Animated.Value(0);
         const offsetTop = new Animated.Value(-20);
         const fadeOut = new Animated.Value(1);
         const backToZero = new Animated.Value(0);
+        const { fadeAnim } = this.state;
         let reverArray = [
-            { opacity: fadeIn, offset: offsetTop, targetAlpha: 1, targetOff: 0 },
+            { opacity: fadeAnim, offset: offsetTop, targetAlpha: 1, targetOff: 0 },
             { opacity: fadeOut, offset: backToZero, targetAlpha: 0, targetOff: -20 }
         ];
 
-        Animated.parallel([
-            Animated.timing(
-                reverArray[0].opacity,
-                {
-                    toValue: reverArray[0].targetAlpha,
-                    duration: animtionDuration,
-                }
-            ),
-            Animated.timing(
-                reverArray[0].offset,
-                {
-                    toValue: reverArray[0].targetOff,
-                    duration: animtionDuration,
-                }
-            )
-        ]).start(() => {
-            reverArray.reverse();
-        });
+        // Animated.parallel([
+        //     Animated.timing(
+        //         fadeAnim,
+        //         {
+        //             toValue: reverArray[0].targetAlpha,
+        //             //duration: animtionDuration,
+        //         }
+        //     ),
+        //     // Animated.timing(
+        //     //     reverArray[0].offset,
+        //     //     {
+        //     //         toValue: reverArray[0].targetOff,
+        //     //         duration: animtionDuration,
+        //     //     }
+        //     // )
+        // ]).start();
 
         return (
             <Animated.View
-                style={{
-                    top: offsetTop,
-                    opacity: fadeIn,
-                    alignItems: 'center'
-                }}
+            // style={{
+            //     top: fadeAnim.interpolate({
+            //         inputRange: [0, 100],
+            //         outputRange: [0, -20]
+            //     }),
+            //     opacity: fadeAnim.interpolate({
+            //         inputRange: [0, 100],
+            //         outputRange: [1, 0]
+            //     }),
+            // }}
             >
                 <Text style={{ ...styles.windHumidity }}>湿度 {observe.humidity}%</Text>
             </Animated.View>
@@ -620,6 +705,9 @@ export default class FetchExample extends Component {
                 </View>
             );
         }
+    }
+    onToggle = (e) => {
+        console.log(e);
     }
     /**
      * 未来一周天气（不包含今日）

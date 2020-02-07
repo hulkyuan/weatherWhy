@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     View, Text, StyleSheet,
     FlatList, TouchableOpacity, ActivityIndicator,
-    TextInput, SafeAreaView, Button,
+    TextInput, SafeAreaView, Button,Animated
 } from 'react-native';
 import queryString from 'query-string';
 import NavigateIcon from './assets/images/svg/ios-navigate.svg'
@@ -47,8 +47,12 @@ export default class CitySwitch extends Component {
             list: [],
             heartBeat: 500,
             source: 'xw',
-            result: ''
+            result: '',
+            
         }
+    }
+    componentWillUnmount(){
+        console.log('fadeout');
     }
     render() {
         const { searchText, list, result, loading } = this.state;
