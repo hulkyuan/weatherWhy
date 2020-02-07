@@ -118,7 +118,7 @@ export default class FetchExample extends Component {
             fadeAnim: new Animated.Value(0),
             offsetStartY: 0,
             offsetEndY: 0,
-            point: 200,
+            point: 150,
             scale: 2,
             phoneVersion: 7
         }
@@ -137,9 +137,6 @@ export default class FetchExample extends Component {
      */
     phoneDimension = () => {
         const h = Dimensions.get('window').height;
-        if (h === 896) {
-
-        }
     }
     geolocation = () => {
         Geolocation.getCurrentPosition((info) => {
@@ -271,7 +268,6 @@ export default class FetchExample extends Component {
                             inputRange: [0, point],
                             outputRange: [height / 2, height / 1.8]
                         }),
-                        //height: height / 2,
                         zIndex: 0,
                         position: 'absolute',
                         width: '100%'
@@ -291,6 +287,27 @@ export default class FetchExample extends Component {
                         </View>
                     </LinearGradient>
                 </Animated.View>
+                <Animated.View
+                    style={{
+                        position: 'relative',
+                        height: height / 4,
+                        alignItems:'center',
+                        justifyContent:'center',
+                        paddingTop: 80,
+                        opacity: fadeAnim.interpolate({
+                            inputRange: [point / 2, point],
+                            outputRange: [0, 1]
+                        }),
+                        top:fadeAnim.interpolate({
+                            inputRange: [0, point],
+                            outputRange: [20, 0]
+                        }),
+                    }}
+                >
+                    <Text style={{ ...styles.poetry }}>孤夜闻风啸，霜冻满江城</Text>
+                    <Text style={{ ...styles.poetry }}>冬风卷残叶，望南思王君</Text>
+                    <Text style={{ ...styles.poetry, fontSize: 14, }}>二流码农袁飘飘</Text>
+                </Animated.View>
                 {/* 底部天气界面部分 */}
                 <Animated.FlatList
                     style={{
@@ -299,7 +316,7 @@ export default class FetchExample extends Component {
                     }}
                     ListHeaderComponent={
                         <View>
-                            <View style={{ height: height / 2, }}></View>
+                            <View style={{ height: height / 4, }}></View>
                             <View style={{ ...styles.section2, }}>
                                 {this.createListItem()}
                             </View>
@@ -479,21 +496,7 @@ export default class FetchExample extends Component {
                         </View>
                         <Text style={{ ...styles.lightColor, ...styles.degreeNumberStyle, padding: 5 }}>{tips.observe[0]}</Text>
                     </Animated.View>
-                    <Animated.View
-                        style={{
-                            position: 'absolute',
-                            top: 10,
-                            alignItems: "flex-end",
-                            opacity: fadeAnim.interpolate({
-                                inputRange: [point / 2, point],
-                                outputRange: [0, 1]
-                            })
-                        }}
-                    >
-                        <Text style={{ ...styles.poetry }}>孤夜闻风啸，霜冻满江城</Text>
-                        <Text style={{ ...styles.poetry }}>冬风卷残叶，望南思王君</Text>
-                        <Text style={{ ...styles.poetry, fontSize: 14 }}>二流码农袁飘飘</Text>
-                    </Animated.View>
+
                 </View>
             );
         }
