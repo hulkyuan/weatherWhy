@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     View, Image, Text, StyleSheet, Dimensions,
     FlatList, SectionList, TouchableOpacity,
-    Animated, Platform,
+    Animated,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import queryString from 'query-string';

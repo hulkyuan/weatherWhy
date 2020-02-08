@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import {
     View, Text, StyleSheet,
     FlatList, TouchableOpacity, ActivityIndicator,
-    TextInput, SafeAreaView, Button, Animated, AsyncStorage
+    TextInput, SafeAreaView, Button
 } from 'react-native';
 import queryString from 'query-string';
+import AsyncStorage from '@react-native-community/async-storage';
 import NavigateIcon from './assets/images/svg/ios-navigate.svg'
 const styles = StyleSheet.create({
     iconStyle: {
@@ -31,6 +32,9 @@ const styles = StyleSheet.create({
     },
     searchItem: {
         fontSize: 20, paddingBottom: 15
+    },
+    historyItem: {
+        padding: 10, paddingLeft: 20, paddingRight: 20, backgroundColor: '#f2f2f2', margin: 5, marginLeft: 0, borderRadius: 20
     }
 });
 
@@ -44,19 +48,71 @@ export default class CitySwitch extends Component {
         super(props);
         this.state = {
             searchText: '',
-            list: [],
+            list: this.props.list || [],
             heartBeat: 500,
             source: 'xw',
             result: '',
-
+            history: []
         }
     }
     //关闭页面动画
     componentWillUnmount() {
         //console.log('fadeout');
     }
+    componentDidMount() {
+        this.getHistory();
+    }
+    getHistory = async () => {
+        try {
+            const value = await AsyncStorage.getItem('history');
+            let setData = [];
+            if (value !== null) {
+                setData = JSON.parse(value);
+            }
+            this.setState({
+                history: setData
+            })
+            return setData;
+        } catch (error) {
+            //console.log(error);
+        }
+    }
+    storeData = async (item) => {
+        let historyList = await this.getHistory();
+        const store = { name: item.name, type: item.type };
+        historyList.unshift(store);
+        historyList = historyList.map((item, index) => {
+            return {
+                ...item,
+                index
+            }
+        });
+        const unique = historyList
+            .sort((a, b) => a.name > b.name)
+            .reduce((init, current) => {
+                if (init.length === 0 || init[init.length - 1].name !== current.name) {
+                    init.push(current);
+                }
+                return init;
+            }, [])
+            .slice(0, 3)
+            .sort((a, b) => a.index < b.index);
+        try {
+            await AsyncStorage.setItem('history', JSON.stringify(unique));
+            return true;
+        } catch (error) {
+            //console.log(error);
+        }
+    }
+
     render() {
-        const { searchText, list, result, loading } = this.state;
+        let { searchText, list, result, loading, history } = this.state;
+        history = history.map((item, index) => {
+            return {
+                ...item,
+                key: index
+            }
+        })
         return (
             <SafeAreaView style={styles.searchPanel}>
                 <View style={{ flex: 1 }}>
@@ -89,6 +145,13 @@ export default class CitySwitch extends Component {
                     <View style={{ borderBottomColor: 'white', paddingBottom: 1, borderBottomWidth: 1, shadowOpacity: 1, shadowColor: '#cccccc', shadowRadius: 1, shadowOffset: { height: 1 } }}></View>
 
                     <View style={{ ...styles.searchList }}>
+                        {
+                            history.length > 0 &&
+                            <View >
+                                <Text>历史记录</Text>
+                                {this.createHistoryItem(history)}
+                            </View>
+                        }
                         {loading &&
                             <View >
                                 <ActivityIndicator size="small" color="lightblue" />
@@ -118,7 +181,25 @@ export default class CitySwitch extends Component {
             </View>
         );
     }
-    onChooseCity = (item) => {
+    createHistoryItem = (history) => {
+        return (
+            <View style={{ flexDirection: 'row' }}>
+                {history.map((item) => {
+                    const splitArray = item.name.split(',');
+                    const cityName = splitArray[splitArray.length - 1].trim();
+                    return (
+                        <TouchableOpacity onPress={() => { this.onChooseCity(item); }}>
+                            <View style={{ ...styles.historyItem }}>
+                                <Text >{cityName}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
+
+            </View>
+        );
+    }
+    onChooseCity = async (item) => {
         let data;
         if (item.type === 'tourist') {
             data = {
@@ -136,9 +217,13 @@ export default class CitySwitch extends Component {
                 county: item.name.split(',')[2] && item.name.split(',')[2].trim()
             }
         }
-        this.props.onCloseSearchPanel();
-        this.props.weatherFecth(data, item.type);
+        const res = await this.storeData(item);
+        if (res) {
+            this.props.onCloseSearchPanel();
+            this.props.weatherFecth(data, item.type);
+        }
     }
+
     onChangeText = (text) => {
         clearTimeout(this.queryTimeout);
         this.setState({
