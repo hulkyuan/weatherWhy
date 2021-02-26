@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import queryString from 'query-string';
 import AsyncStorage from '@react-native-community/async-storage';
-import NavigateIcon from './assets/images/svg/ios-navigate.svg'
+import NavigateIcon from '../../assets/images/svg/ios-navigate.svg'
 const styles = StyleSheet.create({
     iconStyle: {
         width: 20,
@@ -104,7 +104,10 @@ export default class CitySwitch extends Component {
             //console.log(error);
         }
     }
-
+    getLocal = () => {
+        this.props.navigation.goBack();
+        this.props.route.params.getCurrentLocation();
+    }
     render() {
         let { searchText, list, result, loading, history } = this.state;
         history = history.map((item, index) => {
@@ -135,7 +138,7 @@ export default class CitySwitch extends Component {
                         </View>
                     </View>
                     <View style={{ padding: 5, paddingLeft: 20 }}>
-                        <TouchableOpacity onPress={this.props.getCurrentLocation}>
+                        <TouchableOpacity onPress={this.getLocal}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <NavigateIcon style={{ ...styles.iconStyle, paddingRight: 10 }} fill="lightblue" />
                                 <Text>获取当前位置</Text>
@@ -219,8 +222,10 @@ export default class CitySwitch extends Component {
         }
         const res = await this.storeData(item);
         if (res) {
-            this.props.onCloseSearchPanel();
-            this.props.weatherFecth(data, item.type);
+            // this.props.onCloseSearchPanel();
+            this.props.navigation.goBack();
+            this.props.route.params.weatherFecth(data, item.type);
+            // this.props.navigation.navigate('Home', { address_component: data, type: item.type });
         }
     }
 

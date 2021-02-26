@@ -258,11 +258,11 @@ const skyLineLocal = {
             height: 264,
             layer1: {
                 height: 264,
-                uri: './assets/tianqi/day/C2/layer1.png',
+                uri: '../../assets/tianqi/day/C2/layer1.png',
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C2/layer2.png',
+                uri: '../../assets/tianqi/day/C2/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -274,11 +274,11 @@ const skyLineLocal = {
             height: 264,
             layer1: {
                 height: 264,
-                uri: './assets/tianqi/day/C1/layer1.png',
+                uri: '../../assets/tianqi/day/C1/layer1.png',
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C1/layer2.png',
+                uri: '../../assets/tianqi/day/C1/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -290,11 +290,11 @@ const skyLineLocal = {
             height: 264,
             layer1: {
                 height: 264,
-                uri: './assets/tianqi/day/C3/layer1.png',
+                uri: '../../assets/tianqi/day/C3/layer1.png',
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C3/layer2.png',
+                uri: '../../assets/tianqi/day/C3/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -306,11 +306,11 @@ const skyLineLocal = {
             height: 264,
             layer1: {
                 height: 264,
-                uri: './assets/tianqi/day/C4/layer1.png',
+                uri: '../../assets/tianqi/day/C4/layer1.png',
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C4/layer2.png',
+                uri: '../../assets/tianqi/day/C4/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -322,11 +322,11 @@ const skyLineLocal = {
             height: 264,
             layer1: {
                 height: 264,
-                uri: './assets/tianqi/day/C5/layer1.png',
+                uri: '../../assets/tianqi/day/C5/layer1.png',
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C5/layer2.png',
+                uri: '../../assets/tianqi/day/C5/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -337,12 +337,12 @@ const skyLineLocal = {
             colors: ['#9b9b96', '#c1c1bc'],
             height: 264,
             layer1: {
-                uri: './assets/tianqi/day/C6/layer1.png',
+                uri: '../../assets/tianqi/day/C6/layer1.png',
                 height: 264,
             },
             layer2: {
                 height: 264,
-                uri: './assets/tianqi/day/C6/layer2.png',
+                uri: '../../assets/tianqi/day/C6/layer2.png',
             },
             layer3: {
                 height: 264,
@@ -353,11 +353,11 @@ const skyLineLocal = {
             colors: ['#c09461', '#eedfa1'],
             height: 264,
             layer1: {
-                uri: './assets/tianqi/day/C7/layer1.png',
+                uri: '../../assets/tianqi/day/C7/layer1.png',
                 height: 264,
             },
             layer2: {
-                uri: './assets/tianqi/day/C7/layer2.png',
+                uri: '../../assets/tianqi/day/C7/layer2.png',
                 height: 264,
             },
             layer3: {
@@ -369,11 +369,11 @@ const skyLineLocal = {
             colors: ['#50ade8', '#7ae0fa'],
             height: 264,
             layer1: {
-                uri: './assets/tianqi/day/C9/layer1.png',
+                uri: '../../assets/tianqi/day/C9/layer1.png',
                 height: 264,
             },
             layer2: {
-                uri: './assets/tianqi/day/C9/layer2.png',
+                uri: '../../assets/tianqi/day/C9/layer2.png',
                 height: 264,
             },
             layer3: {
@@ -388,15 +388,15 @@ const skyLineLocal = {
             height: 1000,
             layer1: {
                 height: 1000,
-                uri: './assets/tianqi/night/C1/layer1.png',
+                uri: '../../assets/tianqi/night/C1/layer1.png',
             },
             layer2: {
                 height: 1000,
-                uri: './assets/tianqi/night/C1/layer2.png',
+                uri: '../../assets/tianqi/night/C1/layer2.png',
             },
             layer3: {
                 height: 1000,
-                uri: './assets/tianqi/night/C1/layer3.png'
+                uri: '../../assets/tianqi/night/C1/layer3.png'
             }
         },
         C9: {
@@ -404,15 +404,15 @@ const skyLineLocal = {
             height: 1000,
             layer1: {
                 height: 1000,
-                uri: './assets/tianqi/night/C1/layer1.png',
+                uri: '../../assets/tianqi/night/C1/layer1.png',
             },
             layer2: {
                 height: 1000,
-                uri: './assets/tianqi/night/C1/layer2.png',
+                uri: '../../assets/tianqi/night/C1/layer2.png',
             },
             layer3: {
                 height: 1000,
-                uri: './assets/tianqi/night/C2/layer3.png'
+                uri: '../../assets/tianqi/night/C2/layer3.png'
             }
         }
     },

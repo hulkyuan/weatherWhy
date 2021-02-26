@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import Zero0 from './assets/day/00.svg';
-import Zero1 from './assets/day/01.svg';
-import Zero2 from './assets/day/02.svg';
-import Zero3 from './assets/day/03.svg';
-import Zero4 from './assets/day/04.svg';
-import Zero5 from './assets/day/05.svg';
-import Zero6 from './assets/day/06.svg';
-import Zero7 from './assets/day/07.svg';
-import Zero8 from './assets/day/08.svg';
-import Zero9 from './assets/day/09.svg';
+import Zero0 from '../../assets/day/00.svg';
+import Zero1 from '../../assets/day/01.svg';
+import Zero2 from '../../assets/day/02.svg';
+import Zero3 from '../../assets/day/03.svg';
+import Zero4 from '../../assets/day/04.svg';
+import Zero5 from '../../assets/day/05.svg';
+import Zero6 from '../../assets/day/06.svg';
+import Zero7 from '../../assets/day/07.svg';
+import Zero8 from '../../assets/day/08.svg';
+import Zero9 from '../../assets/day/09.svg';
 const styles = {
     iconStyle: {
         width: 20,
@@ -30,7 +30,7 @@ export default class Weather extends Component {
     }
     weatherRender = (code) => {
         const number = code;
-        const url = `./assets/day/svg/${number}.svg`;
+        const url = `../../assets/day/svg/${number}.svg`;
         const httpsUrl = `https://mat1.gtimg.com/pingjs/ext2020/weather/mobile2.0/assets/weather/day/${number}.svg`;
         //console.log(httpsUrl);
         switch (code) {
