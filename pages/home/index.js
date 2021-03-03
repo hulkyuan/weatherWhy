@@ -308,8 +308,7 @@ export default class HomeScreen extends PureComponent {
                         }),
                     }}
                 >
-                    <Text style={{ ...styles.poetry }}>孤夜闻风啸，霜冻满江城</Text>
-                    <Text style={{ ...styles.poetry }}>冬风卷残叶，望南思王君</Text>
+                    <Text style={{ ...styles.poetry }}>屎一定要在公司拉</Text>
                     <Text style={{ ...styles.poetry, fontSize: 14, }}>二流码农袁飘飘</Text>
                 </Animated.View>
                 {/* 底部天气界面部分 */}

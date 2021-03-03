@@ -134,7 +134,7 @@ export default class CitySwitch extends Component {
                             />
                         </View>
                         <View style={styles.searchCloseBtn}>
-                            <Button onPress={this.props.onCloseSearchPanel} title="取消" />
+                            <Button onPress={ this.props.navigation.goBack} title="取消" />
                         </View>
                     </View>
                     <View style={{ padding: 5, paddingLeft: 20 }}>
@@ -187,11 +187,11 @@ export default class CitySwitch extends Component {
     createHistoryItem = (history) => {
         return (
             <View style={{ flexDirection: 'row' }}>
-                {history.map((item) => {
+                {history.map((item,index) => {
                     const splitArray = item.name.split(',');
                     const cityName = splitArray[splitArray.length - 1].trim();
                     return (
-                        <TouchableOpacity onPress={() => { this.onChooseCity(item); }}>
+                        <TouchableOpacity key={index} onPress={() => { this.onChooseCity(item); }}>
                             <View style={{ ...styles.historyItem }}>
                                 <Text >{cityName}</Text>
                             </View>

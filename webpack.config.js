@@ -22,8 +22,9 @@ module.exports = {
             "react",
             "module:metro-react-native-babel-preset"
           ],
-          plugins: ["react-hot-loader/babel"]
-        }
+          plugins: ["react-hot-loader/babel","import", { libraryName: "@ant-design/react-native" }],
+
+        },
       },
       {
         test: /\.svg$/,
